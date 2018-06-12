@@ -6,12 +6,16 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.constraints.NotNull;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
+
+//@Transactional(isolation = Isolation.READ_COMMITTED)
 @Repository
 public class UserDAO {
     static final Integer EMPTY_SQL_STRING_LENGTH = 17;
@@ -41,7 +45,7 @@ public class UserDAO {
             if (conditionEmail) {
                 sql.append(',');
             }
-            sql.append(" about='").append(about).append("'");
+            sql.append(" about='").append(about).append("'::citext");
         }
 
         if (conditionFullname) {
@@ -58,12 +62,12 @@ public class UserDAO {
     }
 
     public User getUser(@NotNull String nickname) throws DataAccessException {
-        return jdbcTemplate.queryForObject("SELECT * FROM \"User\" WHERE nickname = ?::citext;",
+        return jdbcTemplate.queryForObject("SELECT * FROM \"User\" WHERE nickname = ?::CITEXT;",
                 new Object[]{nickname}, new UserMapper());
     }
 
     public ArrayList<User> getUsers(@NotNull String nickname, @NotNull String email) throws DataAccessException {
-        return (ArrayList<User>) jdbcTemplate.query("SELECT * FROM \"User\" WHERE email = ?::citext OR nickname = ?::citext;",
+        return (ArrayList<User>) jdbcTemplate.query("SELECT * FROM \"User\" WHERE email = ?::CITEXT OR nickname = ?::CITEXT;",
                 new Object[]{email, nickname}, new UserMapper());
     }
 
@@ -76,8 +80,11 @@ public class UserDAO {
             user.setNickname(resultSet.getString("nickname"));
             user.setFullname(resultSet.getString("fullname"));
             user.setAbout(resultSet.getString("about"));
-            user.setId(resultSet.getInt("id"));
+            user.setId(resultSet.getLong("id"));
 
+            if (resultSet.wasNull()) {
+                user.setAbout(null);
+            }
             return user;
         }
     }

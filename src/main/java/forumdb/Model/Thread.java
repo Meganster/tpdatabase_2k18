@@ -1,26 +1,24 @@
 package forumdb.Model;
 
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-
 import java.sql.Timestamp;
 
 public class Thread {
     private String author;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
-    private Timestamp created;
+    private String created;
     private String forum;
-    private Integer id;
+    private Long id;
     private String message;
     private String title;
     private String slug;
-    private Integer votes;
+    private Long votes;
+    private Long forum_id;
 
-    public int getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -56,11 +54,11 @@ public class Thread {
         this.message = message;
     }
 
-    public int getVotes() {
+    public Long getVotes() {
         return votes;
     }
 
-    public void setVotes(int votes) {
+    public void setVotes(Long votes) {
         this.votes = votes;
     }
 
@@ -72,11 +70,19 @@ public class Thread {
         this.slug = slug;
     }
 
-    public Timestamp getCreated() {
+    public String getCreated() {
         return created;
     }
 
     public void setCreated(Timestamp created) {
-        this.created = created;
+        this.created = created.toInstant().toString();
+    }
+
+    public Long getForumID() {
+        return forum_id;
+    }
+
+    public void setForumID(Long forum_id) {
+        this.forum_id = forum_id;
     }
 }

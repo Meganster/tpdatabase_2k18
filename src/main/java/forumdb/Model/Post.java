@@ -1,26 +1,25 @@
 package forumdb.Model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-
 import java.sql.Timestamp;
 
 
 public class Post {
     private String author;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
-    private Timestamp created;
+    private String created;
     private String forum;
-    private Integer id;
+    private Long id;
     private Boolean isEdited;
     private String message;
-    private Integer parent;
-    private Integer thread;
+    private Long parent;
+    private Long thread;
+    private Long forum_id;
+    private Object[] path;
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public Integer getParent() {
+    public Long getParent() {
         return parent;
     }
 
@@ -40,12 +39,16 @@ public class Post {
         return forum;
     }
 
-    public Integer getThread() {
+    public Long getThread() {
         return thread;
     }
 
-    public Timestamp getCreated() {
+    public String getCreated() {
         return created;
+    }
+
+    public Long getForumID() {
+        return forum_id;
     }
 
 
@@ -57,11 +60,11 @@ public class Post {
         this.message = message;
     }
 
-    public void setParent(Integer parent) {
+    public void setParent(Long parent) {
         this.parent = parent;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -73,11 +76,24 @@ public class Post {
         this.forum = forum;
     }
 
-    public void setThread(Integer thread) {
+    public void setThread(Long thread) {
         this.thread = thread;
     }
 
     public void setCreated(Timestamp created) {
-        this.created = created;
+        this.created = created.toInstant().toString();
+    }
+
+    public void setForumID(Long forum_id) {
+        this.forum_id = forum_id;
+    }
+
+
+    public Object[] getPath() {
+        return path;
+    }
+
+    public void setPath(Object[] path) {
+        this.path = path;
     }
 }

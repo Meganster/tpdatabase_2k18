@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.lang.Error;
 import java.sql.Timestamp;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -33,7 +34,7 @@ public class PostController {
 
         Thread thread;
         try {
-            final int threadID = Integer.parseInt(slugOrId);
+            final Long threadID = Long.parseLong(slugOrId);
             thread = threadService.getThreadByID(threadID);
         } catch (NumberFormatException e) {
             thread = threadService.getThreadBySlug(slugOrId);
@@ -43,14 +44,14 @@ public class PostController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find post thread by id " + slugOrId));
         }
 
+
         try {
             final Forum forum = forumService.getForum(thread.getForum());
             final Timestamp currentTime = new Timestamp(System.currentTimeMillis());
-            final Integer oldMaxPostID = postService.getMaxPostId();
 
             for (Post post : posts) {
                 if (post.getForum() != null) {
-                    if (post.getForum() != thread.getForum()) {
+                    if (!post.getForum().equals(thread.getForum())) {
                         return ResponseEntity.status(HttpStatus.CONFLICT).body(postService.getPostBySlugForum(thread.getForum()));
                     }
                 }
@@ -58,6 +59,7 @@ public class PostController {
                 post.setForum(forum.getSlug());
                 post.setThread(thread.getId());
                 post.setCreated(currentTime);
+                post.setForumID(thread.getForumID());
 
                 try {
                     userService.getUser(post.getAuthor());
@@ -65,23 +67,34 @@ public class PostController {
                     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find post thread by id " + slugOrId));
                 }
 
-                final Integer parentId = post.getParent();
+                final Long parentId = post.getParent();
+                Boolean isRoot = false;
                 if (parentId != null && !parentId.equals(0)) {
                     postService.getParentPost(parentId, thread.getId());
+                } else {
+                    isRoot = true;
+                    post.setParent(0L);
                 }
 
-                postService.createPost(post);
+                final Long postID = postService.createPost(post);
+                post.setId(postID);
+
+                if (isRoot == true) {
+                    postService.addPostToPathSelf(post);
+                } else {
+                    final Post parentPost = postService.getPostById(post.getParent());
+                    postService.addPostToPath(parentPost, post);
+                }
             }
 
-            forumService.upNumberOfPosts(forum.getSlug(), posts.size());
-            return ResponseEntity.status(HttpStatus.CREATED).body(postService.getNewPosts(oldMaxPostID));
+            return ResponseEntity.status(HttpStatus.CREATED).body(posts);
         } catch (DataAccessException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(new Error("Parent post was created in another thread"));
         }
     }
 
     @PostMapping(value = "api/post/{id}/details")
-    public ResponseEntity<?> updatePost(@PathVariable("id") Integer id, @RequestBody Post changedPost) {
+    public ResponseEntity<?> updatePost(@PathVariable("id") Long id, @RequestBody Post changedPost) {
         final Post post;
         try {
             post = postService.getPostById(id);
@@ -94,7 +107,7 @@ public class PostController {
     }
 
     @GetMapping(value = "api/post/{id}/details")
-    public ResponseEntity<?> getPostDetails(@PathVariable("id") Integer id,
+    public ResponseEntity<?> getPostDetails(@PathVariable("id") Long id,
                                             @RequestParam(value = "related", defaultValue = "") String[] related) {
 
         final Post post;
@@ -108,35 +121,47 @@ public class PostController {
         final PostDetails postDetails = new PostDetails(post);
         if (related == null) {
             return ResponseEntity.status(HttpStatus.OK).body(postDetails);
-        }
-
-        for (String key : related) {
-            if (key.equals("user")) {
+        } else {
+            if (Arrays.asList(related).contains("user")) {
                 postDetails.setAuthor(userService.getUser(post.getAuthor()));
             }
 
-            if (key.equals("thread")) {
+            if (Arrays.asList(related).contains("thread")) {
                 postDetails.setThread(threadService.getThreadByID(post.getThread()));
             }
 
-            if (key.equals("forum")) {
+            if (Arrays.asList(related).contains("forum")) {
                 postDetails.setForum(forumService.getForum(post.getForum()));
             }
         }
+
+//        for (String key : related) {
+//            if (key.equals("user")) {
+//                postDetails.setAuthor(userService.getUser(post.getAuthor()));
+//            }
+//
+//            if (key.equals("thread")) {
+//                postDetails.setThread(threadService.getThreadByID(post.getThread()));
+//            }
+//
+//            if (key.equals("forum")) {
+//                postDetails.setForum(forumService.getForum(post.getForum()));
+//            }
+//        }
 
         return ResponseEntity.status(HttpStatus.OK).body(postDetails);
     }
 
     @GetMapping(value = "api/thread/{slug_or_id}/posts")
     public ResponseEntity<?> getPosts(@PathVariable("slug_or_id") String slugOrId,
-                                      @RequestParam(value = "since", defaultValue = "0") Integer since,
-                                      @RequestParam(value = "limit", defaultValue = "0") Integer limit,
+                                      @RequestParam(value = "since", defaultValue = "0") Long since,
+                                      @RequestParam(value = "limit", defaultValue = "0") Long limit,
                                       @RequestParam(value = "sort", defaultValue = "flat") String sort,
                                       @RequestParam(value = "desc", defaultValue = "false") Boolean desc) {
 
         Thread thread;
         try {
-            final int threadID = Integer.parseInt(slugOrId);
+            final Long threadID = Long.parseLong(slugOrId);
             thread = threadService.getThreadByID(threadID);
         } catch (NumberFormatException e) {
             thread = threadService.getThreadBySlug(slugOrId);
@@ -156,11 +181,6 @@ public class PostController {
         }
 
         if (sort.equals("parent_tree")) {
-            //System.out.println("DESC = " + desc);
-            //System.out.println("limit = " + limit);
-            //System.out.println("since = " + since);
-            //System.out.println("sort = " + sort);
-            //System.out.println("threadID = " + thread.getId());
             resultPosts = postService.getParentTreeSortForPosts(thread.getId(), since, limit, desc);
         }
 
