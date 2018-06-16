@@ -29,8 +29,6 @@ public class PostController {
     @Autowired
     ThreadDAO threadService;
 
-    public static final Long MAX_LONG = 2000000L;
-
     @PostMapping(value = "/api/thread/{slug_or_id}/create")
     public ResponseEntity<?> createPosts(@PathVariable("slug_or_id") String slugOrId, @RequestBody List<Post> posts) {
         Thread thread;
@@ -46,15 +44,15 @@ public class PostController {
                 posts = postService.CreatePostsFromList(posts, thread);
 
                 if (posts == null) {
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find post thread by id " + slugOrId));
                 } else {
                     return ResponseEntity.status(HttpStatus.CREATED).body(posts);
                 }
             } catch (RuntimeException error) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(new Error("Parent post was created in another thread"));
             }
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find post thread by id " + slugOrId));
         }
     }
 
@@ -64,7 +62,7 @@ public class PostController {
         try {
             post = postService.getPostById(id);
         } catch (DataAccessException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find post with id: " + id));
         }
 
         postService.update(post, changedPost);
@@ -79,7 +77,7 @@ public class PostController {
         try {
             post = postService.getPostById(id);
         } catch (DataAccessException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find post with id: " + id));
         }
 
         final PostDetails postDetails = new PostDetails(post);
@@ -118,7 +116,7 @@ public class PostController {
         }
 
         if (thread == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find thread by slug: " + slugOrId));
         }
 
         List<Post> resultPosts = null;
@@ -127,30 +125,10 @@ public class PostController {
         }
 
         if (sort.equals("tree")) {
-            if (limit == 0) {
-                limit = MAX_LONG;
-            }
-
-            if (since == 0) {
-                if (desc == true) {
-                    since = MAX_LONG;
-                }
-            }
-
             resultPosts = postService.getTreeSortForPosts(thread.getId(), since, limit, desc);
         }
 
         if (sort.equals("parent_tree")) {
-            if (limit == 0) {
-                limit = MAX_LONG;
-            }
-
-            if (since == 0) {
-                if (desc == true) {
-                    since = MAX_LONG;
-                }
-            }
-
             resultPosts = postService.getParentTreeSortForPosts(thread.getId(), since, limit, desc);
         }
 
