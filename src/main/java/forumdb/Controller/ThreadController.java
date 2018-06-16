@@ -34,7 +34,7 @@ public class ThreadController {
             forum = forumService.getForum(slug);
             final User user = userService.getUser(thread.getAuthor());
         } catch (DataAccessException error) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find thread author by nickname: " + thread.getAuthor()));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
         try {
@@ -50,7 +50,7 @@ public class ThreadController {
 
             return ResponseEntity.status(HttpStatus.CREATED).body(thread);
         } catch (DataAccessException error) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Error");//threadService.getThreadBySlug(thread.getSlug()));
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(null);//threadService.getThreadBySlug(thread.getSlug()));
         }
     }
 
@@ -68,13 +68,13 @@ public class ThreadController {
         }
 
         if (thread == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find thread by slug: " + slugOrId));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
         try {
             final User user = userService.getUser(vote.getNickname());
         } catch (DataAccessException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find user by nickname: " + thread.getAuthor()));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
         threadService.vote(thread, vote);
@@ -96,7 +96,7 @@ public class ThreadController {
         }
 
         if (thread == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find thread by slug: " + slugOrId));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         } else {
             return ResponseEntity.status(HttpStatus.OK).body(thread);
         }
@@ -113,7 +113,7 @@ public class ThreadController {
         }
 
         if (thread == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find thread by slug: " + slugOrId));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
         if (thread.getTitle().equals(changedThread.getTitle()) &&

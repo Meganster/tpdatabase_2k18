@@ -29,7 +29,7 @@ public class ForumController {
     public ResponseEntity<?> createForum(@RequestBody Forum forum) {
         try {
             final Forum existForum = forumService.getForum(forum.getSlug());
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Error");//existForum);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(null);//existForum);
         } catch (DataAccessException error) {
             try {
                 final User existUser = userService.getUser(forum.getUser());
@@ -37,7 +37,7 @@ public class ForumController {
                 forumService.create(forum.getTitle(), existUser.getNickname(), forum.getSlug());
                 return ResponseEntity.status(HttpStatus.CREATED).body(forumService.getForum(forum.getSlug()));
             } catch (DataAccessException errorSecond) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find user with nickname: " + forum.getUser()));
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
             }
         }
     }
@@ -47,7 +47,7 @@ public class ForumController {
         try {
             return ResponseEntity.status(HttpStatus.OK).body(forumService.getForum(slug));
         } catch (DataAccessException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find forum with slug: " + slug));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
 
@@ -59,7 +59,7 @@ public class ForumController {
         try {
             forumService.getForum(forumSlug);
         } catch (DataAccessException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find forum with slug: " + forumSlug));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
         return ResponseEntity.status(HttpStatus.OK).body(threadService.getThreads(forumSlug, limit, since, desc));
@@ -74,7 +74,7 @@ public class ForumController {
         try {
             forum = forumService.getForum(slug);
         } catch (DataAccessException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find forum with slug: " + slug));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
         return ResponseEntity.status(HttpStatus.OK).body(forumService.getUsers(forum.getId(), limit, since, desc));

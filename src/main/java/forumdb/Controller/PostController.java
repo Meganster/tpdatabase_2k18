@@ -46,15 +46,15 @@ public class PostController {
                 posts = postService.CreatePostsFromList(posts, thread);
 
                 if (posts == null) {
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find post thread by id " + slugOrId));
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
                 } else {
                     return ResponseEntity.status(HttpStatus.CREATED).body(posts);
                 }
             } catch (RuntimeException error) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(new Error("Parent post was created in another thread"));
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
             }
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find post thread by id " + slugOrId));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
 
@@ -64,7 +64,7 @@ public class PostController {
         try {
             post = postService.getPostById(id);
         } catch (DataAccessException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find post with id: " + id));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
         postService.update(post, changedPost);
@@ -79,7 +79,7 @@ public class PostController {
         try {
             post = postService.getPostById(id);
         } catch (DataAccessException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find post with id: " + id));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
         final PostDetails postDetails = new PostDetails(post);
@@ -118,7 +118,7 @@ public class PostController {
         }
 
         if (thread == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find thread by slug: " + slugOrId));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
         List<Post> resultPosts = null;

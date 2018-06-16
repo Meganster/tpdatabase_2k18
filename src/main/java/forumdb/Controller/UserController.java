@@ -24,7 +24,7 @@ public class UserController {
 
             return ResponseEntity.status(HttpStatus.CREATED).body(userTemplate.getUser(nickname));
         } catch (DataAccessException error) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Error");//userTemplate.getUsers(nickname, user.getEmail()));
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(null);//userTemplate.getUsers(nickname, user.getEmail()));
         }
     }
 
@@ -33,7 +33,7 @@ public class UserController {
         try {
             return ResponseEntity.status(HttpStatus.OK).body(userTemplate.getUser(nickname));
         } catch (DataAccessException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find user by nickname: " + nickname));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
 
@@ -49,17 +49,17 @@ public class UserController {
                     final ArrayList<User> emailList = userTemplate.getUsers("", newEmail);
 
                     if (!emailList.isEmpty()) {
-                        return ResponseEntity.status(HttpStatus.CONFLICT).body(new Error("Can't find user by nickname: " + nickname));
+                        return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
                     }
                 }
 
                 userTemplate.updateProfile(newEmail, user.getFullname(), user.getAbout(), nickname);
                 return ResponseEntity.status(HttpStatus.OK).body(userTemplate.getUser(nickname));
             } catch (DataAccessException error) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(new Error("Can't find user by nickname: " + nickname));
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
             }
         } catch (DataAccessException error1) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find user by nickname: " + nickname));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
 }
